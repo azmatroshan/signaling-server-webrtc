@@ -23,9 +23,13 @@ IO.use((socket, next) => {
 IO.on("connection", (socket) => {
   socket.join(socket.user);
 
+  console.log(socket.user, "Joined");
+
   socket.on("makeCall", (data) => {
     const calleeId = data.calleeId;
     const sdpOffer = data.sdpOffer;
+
+    console.log(sdpOffer);
 
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user,
@@ -37,6 +41,8 @@ IO.on("connection", (socket) => {
     const callerId = data.callerId;
     const sdpAnswer = data.sdpAnswer;
 
+    console.log(sdpAnswer);
+
     socket.to(callerId).emit("callAnswered", {
       callee: socket.user,
       sdpAnswer: sdpAnswer,
@@ -47,16 +53,24 @@ IO.on("connection", (socket) => {
     const calleeId = data.calleeId;
     const iceCandidate = data.iceCandidate;
 
+    console.log(iceCandidate);
+
     socket.to(calleeId).emit("IceCandidate", {
       sender: socket.user,
       iceCandidate: iceCandidate,
     });
   });
 
-  socket.on("disconnect", () => {
-    console.log(socket.user, "Disconnected");
-  });
+  socket.on("disconnect", (data) => {
+    const calleeId = data.calleeId;
 
+    console.log(socket.user, "left");
+    socket.to(calleeId).emit(socket.user, "left");
+  });
+});
+
+app.get("/", (req, res) => {
+  res.send("Welcome!");
 });
 
 
